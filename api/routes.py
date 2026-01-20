@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify
 from .sender import send_message_to_chat
 from datetime import datetime, timedelta, timezone
-from database.database import check_db_status
+from database.database import check_db_status, Database
 
 MAX_LENGTH_MESSAGE = 4096
 
