@@ -1,13 +1,48 @@
 from flask import Blueprint, request, jsonify
 from .sender import send_message_to_chat
-from database.database import Database
+from datetime import datetime, timedelta, timezone
+from database.database import check_db_status
+
+MAX_LENGTH_MESSAGE = 4096
 
 api_routes = Blueprint('api', __name__)
-MAX_LENGTH_MESSAGE = 4096
+last_successful_update = datetime.now(timezone.utc)
 
 @api_routes.route("/health", methods=["GET"])
 def get_health():
-    return jsonify({'answer': "Пока ничего тут нет"})
+    """
+    Роут отправляет состояние бота
+    #### Состояния:
+    - online: Бот в сети
+    - pending: Неактивен уже 3 минуты(На паузе)
+    - offline: Бот не в сети
+    #### Успех:
+    - 200: Отправлено состояние
+    #### Errors:
+    - 503: Бот не в сети или в ожидании 
+    """
+    now = datetime.now(timezone.utc)
+    time_since_last_update = now - last_successful_update
+    
+    status = "online"
+    details = {}
+    
+    if time_since_last_update > timedelta(minutes=3):
+        status = "pending"
+    
+    try:
+        check_db_status()
+        details["database"] = "ok"
+    except Exception:
+        status = "offline"
+        details["database"] = "error"
+    
+    return jsonify({
+        "status": status,
+        "run_time": f"{time_since_last_update.total_seconds():.1f}s",
+        "details": details,
+        "timestamp": now.isoformat()
+    }), 200 if status == "online" or status == "pending" else 503
 
 @api_routes.route("/send", methods=["POST"])
 async def send_route():

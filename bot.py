@@ -1,6 +1,6 @@
 import asyncio
 import logging
-import threading # Добавляем для параллельного запуска Flask
+import threading
 from os import getenv
 from dotenv import load_dotenv
 from flask import Flask
