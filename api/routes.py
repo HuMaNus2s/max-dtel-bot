@@ -1,7 +1,8 @@
 from flask import Blueprint, request, jsonify
 from .sender import send_message_to_chat
 from datetime import datetime, timedelta, timezone
-from database.database import check_db_status, Database
+from database.database import check_db_status
+from database.database import Database
 
 MAX_LENGTH_MESSAGE = 4096
 
@@ -60,6 +61,7 @@ async def send_route():
     - 413: Текст слишком длинный (макс. 4096 символов)
     """
     data = request.get_json() or {}
+    check_db_status()
     
     group_name = data.get('group_name')
     message = data.get('message')
