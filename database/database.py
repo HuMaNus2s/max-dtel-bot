@@ -40,14 +40,14 @@ def check_db_status():
             if missing_tables:
                 return False
 
-            logging.info(f"Database initialized!")
+            logger.info(f"Database initialized!")
             return True
 
     except sqlite3.Error as e:
-        logging.exception(f"Error SQLite: {e}")
+        logger.exception(f"Error SQLite: {e}")
         return False
     except Exception as e:
-        logging.exception(f"Unexpected error: {e}")
+        logger.exception(f"Unexpected error: {e}")
         return False
 
 

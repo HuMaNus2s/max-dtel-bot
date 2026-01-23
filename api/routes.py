@@ -1,8 +1,11 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, abort
 from .sender import send_message_to_chat
 from datetime import datetime, timedelta, timezone
 from database.database import check_db_status
 from database.database import Database
+
+import logging
+logger = logging.getLogger(__name__)
 
 MAX_LENGTH_MESSAGE = 4096
 

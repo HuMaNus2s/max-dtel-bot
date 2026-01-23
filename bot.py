@@ -20,6 +20,8 @@ app.json.ensure_ascii = False
 app.register_blueprint(api_routes, url_prefix='/')
 
 BOT_TOKEN = getenv("BOT_TOKEN")
+HOST_IP = getenv("HOST_IP")
+SERVER_PORT = getenv("SERVER_PORT")
 if not BOT_TOKEN:
     raise ValueError("BOT_TOKEN not found in .env!")
 
@@ -28,29 +30,29 @@ dp = Dispatcher()
 dp.include_routers(commands_router_start)
 
 async def shutdown():
-    logging.info("Closing bot session")
+    logger.info("Closing bot session")
     try:
         await bot.session.close()
     except Exception as e:
-        logging.warning(f"Session close failed: {e}")
+        logger.warning(f"Session close failed: {e}")
 
 def run_flask():
     """Функция для запуска Flask в отдельном потоке"""
-    app.run(host="127.0.0.1", port=5000, debug=False, use_reloader=False)
+    app.run(host=HOST_IP, port=SERVER_PORT, debug=False, use_reloader=False)
 
 async def main():
     if not check_db_status():
-        logging.warning("Database problems! Check your paths.")
+        logger.warning("Database problems! Check your paths.")
     
-    logging.info("BOT STARTING")
+    logger.info("BOT STARTING")
     flask_thread = threading.Thread(target=run_flask, daemon=True)
     flask_thread.start()
-    logging.info("API Server started on http://127.0.0.1:5000")
+    logger.info(f"API Server started on http://{HOST_IP}:{SERVER_PORT}")
 
     try:
         await dp.start_polling(bot)
     except Exception as e:
-        logging.exception("Polling error")
+        logger.exception("Error:", e)
     finally:
         await shutdown()
 
@@ -60,4 +62,4 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         pass
     finally:
-        logging.info("BOT STOPPED")
+        logger.info("BOT STOPPED")
