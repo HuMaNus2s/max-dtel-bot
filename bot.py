@@ -10,6 +10,7 @@ from handlers.start import router as commands_router_start
 from database.database import check_db_status
 from logger.logger import setup_logging
 from api.routes import api_routes
+from api.error_handlers import error_handlers
 
 load_dotenv()
 setup_logging(level=logging.DEBUG, log_file="bot.log")
@@ -18,6 +19,7 @@ logger = logging.getLogger(__name__)
 app = Flask(__name__)
 app.json.ensure_ascii = False
 app.register_blueprint(api_routes, url_prefix='/')
+app.register_blueprint(error_handlers)
 
 BOT_TOKEN = getenv("BOT_TOKEN")
 HOST_IP = getenv("HOST_IP")
