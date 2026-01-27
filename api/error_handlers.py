@@ -32,6 +32,18 @@ def handle_too_large(error):
         "message": f"Слишком большой запрос (макс. {MAX_MESSAGE_LENGTH} символов в сообщении)"
     }), 413
 
+@error_handlers.app_errorhandler(502)
+def handle_bad_gateway(error: HTTPException):
+    """
+    Ошибка при попытке отправить сообщение, если сервер не отвечает.
+    """
+    logger.warning("Ошибка 502: сервер не отвечает при отправке сообщения")
+    return jsonify({
+        "status": "error",
+        "code": 502,
+        "message": "Ошибка отправки сообщения в группу: сервер не отвечает"
+    }), 502
+
 @error_handlers.app_errorhandler(500)
 @error_handlers.app_errorhandler(Exception)
 def handle_server_error(error):

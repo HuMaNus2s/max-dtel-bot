@@ -93,7 +93,7 @@ async def send_message():
     api_key   = data.get("api_key")
 
     if not all([group_name, message, api_key]):
-        abort(400, description="Отсутствует обязательное поле: group_name, message или api_key")
+        abort(400, description="Отсутствет обязательное поле")
 
     if not isinstance(message, str):
         abort(400, description="Поле message должно быть строкой")
@@ -101,8 +101,11 @@ async def send_message():
     if len(message) > MAX_MESSAGE_LENGTH:
         abort(413, description=f"Сообщение слишком длинное (макс. {MAX_MESSAGE_LENGTH} символов)")
 
+    if not message.strip():
+        abort(400, description="Поле message не может быть пустым")
+
     if not Database.is_key_allowed_for_group(api_key, group_name):
-        abort(401, description="Недействительный или неподходящий api_key для этой группы")
+        abort(401, description="Неверный ключ доступа для отправки")
 
     chat_ids: List[int] = Database.get_chat_ids_for_group(group_name)
 
@@ -123,9 +126,16 @@ async def send_message():
             if ok:
                 sent_to.append(str(chat_id))
             else:
+                if err and "server" in str(err).lower():
+                    abort(502, description="Ошибка отправки сообщения в группу: сервер не отвечает")
+
                 failed.append({"chat_id": str(chat_id), "reason": err or "неизвестная ошибка"})
-        except Exception:
+        except Exception as e:
             logger.exception("Ошибка отправки в чат %s", chat_id)
+
+            if "connection" in str(e).lower() or "timeout" in str(e).lower():
+                abort(502, description="Ошибка отправки сообщения в группу: сервер не отвечает")
+
             failed.append({"chat_id": str(chat_id), "reason": "внутренняя ошибка"})
 
     status = "success" if sent_to and not failed else "partial" if sent_to else "failed"
