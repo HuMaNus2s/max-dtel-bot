@@ -1,6 +1,6 @@
 # MAX-бот с REST API для рассылки сообщений в группы
 
-Учебный проект: сервис для отправки сообщений в группы мессенджера MAX через собственный REST API с управлением доступом по API-ключам.
+Производственный проект: сервис для отправки сообщений в группы мессенджера MAX через собственный REST API с управлением доступом по API-ключам.
 
 ## Описание проекта
 
@@ -16,7 +16,7 @@
 
 ## Основные возможности
 
-- Привязка мнемонических имён групп (`dev_team`, `marketing`, `all`) к реальным ID чатов MAX
+- Привязка мнемонических имён групп (`dev_team`, `marketing`, `support`) к реальным ID чатов MAX
 - Управление правами отправки сообщений через API-ключи
 - Отправка сообщений в одну или несколько групп по мнемоническому имени через HTTP-запрос
 - Возврат структурированных JSON-ответов с кодами состояния и описанием ошибок
@@ -27,17 +27,30 @@
 ### POST /send
 
 Отправка сообщения в группу(-ы).
-
-**Тело запроса** (application/json):
+**Тело запроса** (application/json) **data.json**:
 
 ```json
 {
   "group_name": "dev_team",
   "message":   "Завтра в 14:00 — планёрка. Обязательно всем присутствовать.",
-  "api_key":   "sk_test_abc123def456ghi789"
+  "api_key":   "dtel_test_abc123def456ghi789"
 }
 ```
 
+### Для Windows
+```bash
+curl -X POST http://127.0.0.1:5000/send -H "Content-Type: application/json" -d @data.json
+```
+или
+```bash
+curl -X POST http://127.0.0.1:5000/send -H "Content-Type: application/json" -d "{\"group_name\":\"dev_team\",\"message\":\"Ваш текст\",\"api_key\":\"dtel_api_4c21e12c3f9c4e073b37ca8aaeab0caa\"}"
+```
+
+### Для Linux
+
+```bash
+curl -X POST http://127.0.0.1:5000/send -H "Content-Type: application/json" -d '{"group_name":"dev_team","message":"Ваш текст","api_key":"dtel_api_4c21e12c3f9c4e073b37ca8aaeab0caa"}'
+```
 Успешный ответ (200 OK):
 ```json
 {
@@ -46,7 +59,6 @@
   "message": "Сообщение отправлено"
 }
 ```
-
 
 Ошибка 400 (Bad Request)
 ```json
@@ -72,6 +84,21 @@
   "status": "error",
   "code": 502,
   "message": "Ошибка отправки в чат -1001987654321: бот исключён из группы"
+}
+```
+
+### GET /health
+
+```bash
+curl -X GET http://127.0.0.1:5000/health
+```
+Успешный ответ (200 OK)
+```json
+{
+  "details":{"database":"ok"},
+  "run_time_seconds":0.0,
+  "status":"online",
+  "timestamp_utc":"2026-01-24T22:02:44.495131+03:00"
 }
 ```
 
@@ -118,41 +145,34 @@
 
 ```
 BOT_TOKEN=ваш_токен_бота_MAX
-DATABASE_URL=sqlite:///maxbot.db
-```
-
-или для postgresql:
-```
-DATABASE_URL=postgresql://user:password@localhost:5432/maxbot
+HOST_IP=127.0.0.1
+SERVER_PORT=5000
+DATABASE_PATH=database/dtel_database.db - Принимает так же http и sqlite
+MAX_MESSAGE_LENGTH = 4096
 ```
 
 4. Инициализация структуры базы данных  
-   Выполняется автоматически при первом запуске приложения или вручную с помощью команды / скрипта инициализации.
+   Выполняется автоматически при первом запуске приложения.
 
-5. Запуск сервиса (примеры для Python + FastAPI / Flask):
-
+5. Запуск сервиса:
+### Шаг 1 | Установка окружения
 ```bash
-python main.py
+python -m venv venv
 ```
-
-## Примеры запросов (curl)
-Отправка сообщения в группу:
-```bash
-curl -X POST http://localhost:8000/send \
-  -H "Content-Type: application/json" \
-  -d '{
-    "group_name": "dev_team",
-    "message": "Сегодня в 17:00 — разбор инцидента #4582. Обязательно всем присутствовать.",
-    "api_key": "sk_live_9f8e7d6c5b4a3"
-  }'
+**Шаг 1.1 | Активация окружения**
 ```
-
-Проверка работоспособности
+venv\Scripts\activate
+``` 
+### Шаг 2 | Установка зависимостей
 ```bash
-curl http://localhost:8000/health
+pip install -r requirements.txt
+```
+### Шаг 3 | Запуск
+```bash
+python bot.py
 ```
 
 ## Лицензия
-Учебный проект — MIT License (при необходимости можно заменить на другую).
+Производственный проект — MIT License.
 
 Разработано в рамках практического задания по созданию сервисов с внешними интеграциями и управлением доступом.

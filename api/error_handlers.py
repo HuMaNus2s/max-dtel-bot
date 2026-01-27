@@ -15,6 +15,7 @@ MAX_MESSAGE_LENGTH = getenv("MAX_MESSAGE_LENGTH")
 @error_handlers.app_errorhandler(401)
 @error_handlers.app_errorhandler(403)
 @error_handlers.app_errorhandler(404)
+@error_handlers.app_errorhandler(405)
 @error_handlers.app_errorhandler(413)
 @error_handlers.app_errorhandler(415)
 def handle_client_error(error: HTTPException):

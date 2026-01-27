@@ -5,8 +5,9 @@ from os import getenv
 from dotenv import load_dotenv
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List
+import json
 
-from flask import Blueprint, jsonify, request, current_app, abort
+from flask import Blueprint, jsonify, request, current_app, abort, Response
 
 from .sender import send_message_to_chat
 from database.database import Database, check_db_status
@@ -17,7 +18,7 @@ logger = logging.getLogger(__name__)
 
 api_routes = Blueprint('api', __name__)
 
-MAX_MESSAGE_LENGTH = getenv("MAX_MESSAGE_LENGTH")
+MAX_MESSAGE_LENGTH = int(getenv("MAX_MESSAGE_LENGTH"))
 
 @api_routes.get("/health")
 def health_check():
@@ -32,7 +33,8 @@ def health_check():
     #### Errors:
     - 503: Бот не в сети или в ожидании
     """
-    now = datetime.now(timezone.utc)
+    moscow_tz = timezone(timedelta(hours=3))
+    now = datetime.now(moscow_tz)
     last_update = current_app.config.get("last_successful_update", now)
     delta = now - last_update
 
@@ -139,11 +141,31 @@ async def send_message():
             failed.append({"chat_id": str(chat_id), "reason": "внутренняя ошибка"})
 
     status = "success" if sent_to and not failed else "partial" if sent_to else "failed"
-    code   = 201 if status == "success" else 207 if status == "partial" else 200
 
-    return jsonify({
-        "status": status,
-        "sent_to": sent_to,
-        "failed": failed or None,
-        "total_target": len(chat_ids),
-    }), code
+    if status == "success":
+        payload = {
+            "status": status,
+            "sent_to": sent_to,
+            "message": message
+        }
+    elif status == "partial":
+        payload = {
+            "status": status,
+            "sent_to": sent_to,
+            "failed": failed,
+            "message": message
+        }
+    else:
+        payload = {
+            "status": status,
+            "failed": failed,
+            "message": message
+        }
+
+    code = 201 if status == "success" else 207 if status == "partial" else 200
+
+    return Response(
+        json.dumps(payload, ensure_ascii=False),
+        status=code,
+        mimetype="application/json; charset=utf-8"
+    )

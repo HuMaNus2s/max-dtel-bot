@@ -78,7 +78,6 @@ def check_db_status():
             if missing_tables:
                 return False
 
-            logger.info("Database initialized!")
             return True
 
     except sqlite3.Error as e:

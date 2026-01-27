@@ -45,6 +45,8 @@ def run_flask():
 async def main():
     if not check_db_status():
         logger.warning("Database problems! Check your paths.")
+    else:
+        logger.info("DATABASE OK")
     
     logger.info("BOT STARTING")
     flask_thread = threading.Thread(target=run_flask, daemon=True)
